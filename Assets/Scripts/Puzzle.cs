@@ -11,6 +11,7 @@ public class Puzzle : MonoBehaviour
     {
         get { return EightPuzzle.Nodes; }
     }
+    public List<NumberBox> Origin;
 
     public Sprite[] sprite;
 
@@ -18,13 +19,15 @@ public class Puzzle : MonoBehaviour
 
     public float TempoMove = 0.5f;
 
+    public bool IsSolved = false;
+
     void Start()
     {
         EightPuzzle = new EightPuzzle(3);
 
         Init();
 
-        StartCoroutine(Shuffle(20));
+        StartCoroutine(Shuffle(50));
     }
 
     public void ResetAll()
@@ -62,6 +65,7 @@ public class Puzzle : MonoBehaviour
         var whereZero = Boxes.Where(x => x.Index == 0).FirstOrDefault();
 
         whereZero.Instance.GetComponent<SpriteRenderer>().enabled = false;
+        EightPuzzle.SetSnapshot(Boxes);
     }
 
     private IEnumerator Shuffle(int maxCount)
@@ -74,6 +78,20 @@ public class Puzzle : MonoBehaviour
 
             Swap(theChoosenOne);
 
+            yield return new WaitForSecondsRealtime(TempoMove);
+        }
+    }
+
+    private IEnumerator Solve()
+    {
+        // logica para resolver o puzzle
+        while(!IsSolved)
+        {
+            // var neighbors = EightPuzzle.GetNeighbors();
+
+            var theChoosenOne = neighbors.OrderBy(x => Random.Range(0, 9999)).FirstOrDefault();
+            
+            Swap(theChoosenOne);
             yield return new WaitForSecondsRealtime(TempoMove);
         }
     }
@@ -99,19 +117,16 @@ public class Puzzle : MonoBehaviour
         box.Index = 0;
     }
 
-    private bool HasBox(int x, int y)
-    {
-        var has = Boxes.Where(d => d.XPos == x && d.YPos == y).FirstOrDefault();
-        return has != null;
-    }
-
-
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
             ResetAll();
             Init();
+        }
+        if(Input.GetKeyDown(KeyCode.Backspace))
+        {
+            StartCoroutine(Solve());
         }
     }
 }

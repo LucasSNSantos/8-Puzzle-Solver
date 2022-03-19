@@ -5,10 +5,10 @@ using UnityEngine;
 public abstract class Astar<T>
 {
     public List<T> Nodes;
+    public List<T> Snapshot;
     public int Length;
 
-    public abstract void HeuristicDistance();
-    public abstract List<T> GetNeighbors();
+    public abstract int HeuristicDistance(T currentNode, T goalNode);
 
     public Astar(int length)
     {
@@ -16,15 +16,40 @@ public abstract class Astar<T>
         Length = length;
     }
 
-    public void RebuildPath(T cameFrom, T current)
+    public abstract void SetSnapshot(List<T> collection);
+    public abstract Queue<T> AStar(T start, T goal);
+
+    public Queue<T> BuildPath(Dictionary<T, T> cameFrom, T current)
     {
-        /*
-        total_path := {current}
-        while current in cameFrom.Keys:
-            current := cameFrom[current]
-            total_path.prepend(current)
-        return total_path
-         */
+        if (current == null)
+        {
+            return new Queue<T>();
+        }
+
+        var path = new Queue<T>();
+
+        path.Enqueue(current);
+
+        int count = 0;
+
+        while (current != null && cameFrom[current] != null)
+        {
+            if (count > 750)
+            {
+                throw new System.Exception("Timeout");
+            }
+
+            current = cameFrom[current];
+
+            if (current != null)
+            {
+                path.Enqueue(current);
+            }
+        }
+
+        path.Dequeue();
+
+        return path;
     }
 
 }
