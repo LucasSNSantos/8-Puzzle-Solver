@@ -290,7 +290,7 @@ MonoBehaviour:
   - {fileID: -6226498286090505678, guid: 3f1029ddd483428479d9c9442e711e1c, type: 3}
   - {fileID: 312967351301300155, guid: 3f1029ddd483428479d9c9442e711e1c, type: 3}
   - {fileID: -1316342616119400027, guid: 3f1029ddd483428479d9c9442e711e1c, type: 3}
-  TempoMove: 0.2
+  TempoMove: 0.1
   IsSolved: 0
 --- !u!4 &2002188813
 Transform:

@@ -1,27 +1,33 @@
+using Newtonsoft.Json;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class NumberBox : IComparable<NumberBox>
+public class NumberBox
 {
-    public Astar<NumberBox> MyPuzzleSolver;
+    [JsonIgnore]
     public GameObject Instance { get; set; }
+    [JsonIgnore]
+    public SpriteRenderer Renderer { get; set; }
     public int Index = 0;
     public int XPos = 0;
     public int YPos = 0;
-    public int CurrentFullCost;
 
-    public NumberBox(GameObject instance, Astar<NumberBox> myPuzzleSolver, int index)
+    public NumberBox(GameObject instance, int index)
     {
-        MyPuzzleSolver = myPuzzleSolver;
         Instance = instance;
+        if (Instance != null)
+        {
+            Renderer = Instance.GetComponent<SpriteRenderer>();
+        }
         Index = index;
     }
 
     public void Init(int x, int y, Sprite sprite)
     {
-        Instance.GetComponent<SpriteRenderer>().sprite = sprite;
+        if (Instance != null)
+        {
+            Instance.GetComponent<SpriteRenderer>().sprite = sprite;
+        }
         UpdatePosition(x, y);
     }
 
@@ -31,20 +37,12 @@ public class NumberBox : IComparable<NumberBox>
         YPos = y;
     }
 
-    public override bool Equals(object obj)
+    public void UpdateIndex(int index, Sprite sprite)
     {
-        NumberBox objBox = obj as NumberBox;
-
-        if (objBox.XPos == XPos && objBox.YPos == YPos && objBox.Index == Index)
+        Index = index;
+        if (Instance != null)
         {
-            return true;
+            Instance.GetComponent<SpriteRenderer>().sprite = sprite;
         }
-
-        return false;
-    }
-
-    public int CompareTo(NumberBox other)
-    {
-        return CurrentFullCost.CompareTo(other.CurrentFullCost);
     }
 }
