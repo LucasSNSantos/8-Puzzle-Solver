@@ -15,7 +15,7 @@ public class Puzzle : MonoBehaviour
 
     public Sprite[] sprite;
 
-    public Astar<NumberBox> EightPuzzle;
+    public EightPuzzle EightPuzzle;
 
     public float TempoMove = 0.5f;
 
@@ -45,7 +45,7 @@ public class Puzzle : MonoBehaviour
         for (int i = 0; i <= 8; i++)
         {
             GameObject go = Instantiate(boxPrefab, Vector2.zero, Quaternion.identity);
-            Boxes.Add(new NumberBox(go, i));
+            Boxes.Add(new NumberBox(go,EightPuzzle, i));
         }
 
         Queue<NumberBox> qbox = new Queue<NumberBox>(Boxes);
@@ -87,11 +87,11 @@ public class Puzzle : MonoBehaviour
         // logica para resolver o puzzle
         while(!IsSolved)
         {
-            // var neighbors = EightPuzzle.GetNeighbors();
+            //// var neighbors = EightPuzzle.GetNeighbors();
 
-            var theChoosenOne = neighbors.OrderBy(x => Random.Range(0, 9999)).FirstOrDefault();
+            //var theChoosenOne = neighbors.OrderBy(x => Random.Range(0, 9999)).FirstOrDefault();
             
-            Swap(theChoosenOne);
+            //Swap(theChoosenOne);
             yield return new WaitForSecondsRealtime(TempoMove);
         }
     }
