@@ -5,6 +5,10 @@ using System.Linq;
 using UnityEngine;
 using Silentor;
 using Newtonsoft.Json;
+using System.Net.Http;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
 
 [Serializable]
 public class Snapshot : List<NumberBox>, IEquatable<Snapshot>
@@ -32,6 +36,22 @@ public class Snapshot : List<NumberBox>, IEquatable<Snapshot>
         var otherJson = JsonConvert.SerializeObject(other.ToArray());
         var a = thisJson == otherJson;
         return a;
+    }
+
+    public int[,] GetAsMatrix()
+    {
+        int[,] snapMatrix = new int[3, 3];
+        for(int i = 0; i < 3; i++)
+        {
+            for(int j = 0; j < 3; j++)
+            {
+                var snap = this.Where(x => x.XPos == i && x.YPos == j).FirstOrDefault();
+
+                snapMatrix[i, j] = snap.Index;
+            }
+        }
+
+        return snapMatrix;
     }
 
     public string Print()
@@ -135,17 +155,6 @@ public class EightPuzzleGraph : IWeightedGraph<Snapshot>
                 var neighborString = neighbor.Print();
                 var nodeSTring = node.Print();
 
-                //var nodePosition = node.Where(x => x.XPos == position.x && x.YPos == position.y).FirstOrDefault();
-                //var nodeMovement = node.Where(x => x.XPos == movement.x && x.YPos == movement.y).FirstOrDefault();
-
-                //var neighborPosition = neighbor.Where(x => x.XPos == position.x && x.YPos == position.y).FirstOrDefault();
-                //var neighborMovement = neighbor.Where(x => x.XPos == movement.x && x.YPos == movement.y).FirstOrDefault();
-
-                //var prevIndex = nodeMovement.Index;
-
-                //neighborMovement.Index = nodePosition.Index;
-                //neighborPosition.Index = prevIndex;
-
                 neighbors.Add(neighbor);
             }
         }
@@ -172,7 +181,13 @@ public class Puzzle : MonoBehaviour
 
     public AStarSearch<EightPuzzleGraph, Snapshot> Astar;
 
+    private static readonly HttpClient client = new HttpClient();
+
     public float TempoMove = 0.5f;
+
+    public int ShuffleMoves = 50;
+
+    public List<int[,]> Result;
 
     public bool IsSolved = false;
     private bool IsShuffling = false;
@@ -300,6 +315,53 @@ public class Puzzle : MonoBehaviour
         IsShuffling = false;
     }
 
+    private async void AskServer()
+    {
+        var url = "http://localhost:8000/";
+
+        using (var client = new HttpClient())
+        {
+            var contentType = new MediaTypeWithQualityHeaderValue("application/json");
+            var baseAddress = url;
+            client.BaseAddress = new Uri(baseAddress);
+            client.DefaultRequestHeaders.Accept.Add(contentType);
+
+            var data = new Dictionary<string, string>
+            {
+                {"origin", JsonConvert.SerializeObject(Origin.GetAsMatrix()) },
+                {"start", JsonConvert.SerializeObject(SnapshotStart.GetAsMatrix())},
+                {"empty", "0"}
+            };
+
+            var jsonData = JsonConvert.SerializeObject(data);
+            var contentData = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync("/", contentData);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var stringData = await response.Content.ReadAsStringAsync();
+                Result = JsonConvert.DeserializeObject<List<int[,]>>(stringData);
+                StartCoroutine(Solve());
+            }
+        }
+    }
+
+    private void MountFromServer(int[,] snap)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                var currentBox = Boxes.Where(x => x.XPos == i && x.YPos == j).FirstOrDefault();
+
+                currentBox.Index = snap[i, j];
+            }
+        }
+
+        UpdateSnap(Boxes);
+    }
+
     private IEnumerator Solve()
     {
         IsSolving = true;
@@ -307,16 +369,12 @@ public class Puzzle : MonoBehaviour
         var goal = Origin;
         var start = SnapshotStart;
 
-        while(!IsSolved)
+        foreach(var snap in Result)
         {
-            var path = Astar.CreatePath(start, goal);
 
-            foreach(var snapshot in path)
-            {
-                MountFromSnapshot(snapshot);
+            MountFromServer(snap);
 
-                yield return new WaitForSecondsRealtime(TempoMove);
-            }
+            yield return new WaitForSecondsRealtime(TempoMove);
         }
 
         IsSolving = false;
@@ -351,12 +409,13 @@ public class Puzzle : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space) && !IsShuffling)
         {
-            StartCoroutine(Shuffle(50));
+            StartCoroutine(Shuffle(ShuffleMoves));
         }
 
         if(Input.GetKeyDown(KeyCode.R) && !IsSolving)
         {
-            StartCoroutine(Solve());
+            AskServer();
+            // StartCoroutine(Solve());
         }
     }
 }
