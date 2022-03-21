@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,17 +8,17 @@ public class PuzzleUI : MonoBehaviour
 
     public Puzzle MyPuzzle;
 
-    public Image SelectedPiece;
+    public SpriteRenderer CurrentRenderer;
 
-    public SpriteRenderer CurrenteRenderer;
-
+    public Image CurrentSelect;
     public Sprite[] Sprites;
 
     public Transform SpriteContainer;
 
+    public GameObject Selector;
     public GameObject ObjectPrefab;
 
-    private Camera camera;
+    private Camera MyCamera;
 
     void Start()
     {
@@ -40,22 +38,24 @@ public class PuzzleUI : MonoBehaviour
             var obj = Instantiate(ObjectPrefab, SpriteContainer, false);
             obj.GetComponent<Image>().sprite = sprite;
         }
+
+        MyCamera = Camera.main;
     }
 
     private void Update()
-    { 
+    {
         if (Input.GetMouseButtonDown(0))
         {
-            var mousePos = Input.mousePosition;
+            var mousePos = MyCamera.ScreenToWorldPoint(Input.mousePosition);
             Vector2 mousePos2D = new Vector2(mousePos.x, mousePos.y);
 
             RaycastHit2D hit = Physics2D.Raycast(mousePos2D, Vector2.zero);
 
             if (hit.collider != null)
             {
-                Debug.Log(hit.collider.gameObject.name);
+                CurrentRenderer = hit.collider.GetComponent<SpriteRenderer>();
+                Selector.SetActive(false);
             }
         }
-        
     }
 }
