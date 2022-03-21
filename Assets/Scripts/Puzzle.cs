@@ -176,6 +176,7 @@ public class Puzzle : MonoBehaviour
     public Sprite[] sprite;
 
     //public EightPuzzle EightPuzzle;
+    public Transform Pivot;
 
     public EightPuzzleGraph EightPuzzleGraph;
 
@@ -244,7 +245,7 @@ public class Puzzle : MonoBehaviour
         
         foreach (var i in valores)
         {
-            GameObject go = Instantiate(boxPrefab, Vector2.zero, Quaternion.identity);
+            GameObject go = Instantiate(boxPrefab, Vector2.zero, Quaternion.identity, Pivot);
 
             int newIndex = i;
 
@@ -405,17 +406,28 @@ public class Puzzle : MonoBehaviour
         box.Index = 0;
     }
 
+    public void ShuffleAction()
+    {
+        if (IsShuffling) return;
+        StartCoroutine(Shuffle(ShuffleMoves));
+    }
+
+    public void SolveAction()
+    {
+        if (IsSolving) return;
+        AskServer();
+    }
+
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && !IsShuffling)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            StartCoroutine(Shuffle(ShuffleMoves));
+            ShuffleAction();
         }
 
-        if(Input.GetKeyDown(KeyCode.R) && !IsSolving)
+        if(Input.GetKeyDown(KeyCode.R))
         {
-            AskServer();
-            // StartCoroutine(Solve());
+            SolveAction();
         }
     }
 }
